@@ -45,7 +45,7 @@ class BuildWhat(object):
         return ret
 
     @abstractmethod
-    def build(self, blocks, deps, relpath, xbem):
+    def build(self, blocks, deps, dir, xbem):
         pass
 
     @abstractmethod
@@ -61,16 +61,14 @@ class BuildWhat(object):
         dir = os.path.dirname(path)
         filename = os.path.basename(path)
         filename = filename.rsplit(".", 1)[0]
-        path = os.path.join(dir, filename)
         try:
             os.makedirs(dir)
         except:
             pass
-        relpath = "/".join([".." for x in dir.split("/") if x])
-        filename = self.get_filename(path)
+        filename = self.get_filename(os.path.join(dir, filename))
         stdout.write("Building %s..." % filename)
         f = open(filename, "w")
-        f.write(self.build(blocks, deps, relpath, xbem))
+        f.write(self.build(blocks, deps, dir, xbem))
         f.close()
         print " done."
 
@@ -81,7 +79,7 @@ class BuildXBEM(BuildWhat):
     def get_filename(self, base):
         return "%s.xbem" % base
 
-    def build(self, blocks, deps, relpath, xbem):
+    def build(self, blocks, deps, dir, xbem):
         if xbem is None:
             return
         if not hasattr(xbem, "built_xbem"):
@@ -124,22 +122,23 @@ class BuildConcat(BuildXBEM):
     def get_footer(self):
         return ""
 
-    @abstractmethod
-    def get_per_file_record(self, filename, relfilename):
-        pass
+    def get_per_file_record(self, filename, dir):
+        filename = os.path.abspath(filename)
+        relfilename = os.path.relpath(filename, dir)
+        return "\n/* Begin of %s. */\n%s\n/* End of %s. */\n" \
+            % (relfilename, open(filename).read(), relfilename)
 
     def get_filename(self, base):
         return "%s.%s" % (base, self.EXT)
 
-    def build(self, blocks, deps, relpath, xbem):
-        super(BuildConcat, self).build(blocks, deps, relpath, xbem)
+    def build(self, blocks, deps, dir, xbem):
+        super(BuildConcat, self).build(blocks, deps, dir, xbem)
         ret = []
         files = self.get_files(blocks, deps, self.EXT)
         if files:
             ret.append(self.get_header())
             for f in files:
-                rf = os.path.normpath(os.path.join(relpath, f))
-                ret.append(self.get_per_file_record(f, rf))
+                ret.append(self.get_per_file_record(f, dir))
             ret.append(self.get_footer())
         ret = "\n".join(ret)
         return ret
@@ -157,13 +156,9 @@ class BuildXSL(BuildConcat):
     def get_footer(self):
         return "\n</xsl:stylesheet>"
 
-    def get_per_file_record(self, filename, relfilename):
-        return "<xsl:include href=\"%s\" />" % relfilename
-
-
-class FileResolver(etree.Resolver):
-    def resolve(self, url, pubid, context):
-        return self.resolve_filename(url, context)
+    def get_per_file_record(self, filename, dir):
+        relfilename = os.path.relpath(os.path.abspath(filename), dir)
+        return "<xsl:import href=\"%s\" />" % relfilename
 
 
 class BuildHTML(BuildXSL):
@@ -172,14 +167,12 @@ class BuildHTML(BuildXSL):
     def get_filename(self, base):
         return "%s.html" % base
 
-    def get_per_file_record(self, filename, relfilename):
-        return "<xsl:include href=\"%s\" />" % filename
+    def get_per_file_record(self, filename, dir):
+        return "<xsl:import href=\"%s\" />" % filename
 
-    def build(self, blocks, deps, relpath, xbem):
-        xsl = super(BuildHTML, self).build(blocks, deps, relpath, xbem)
-        parser = etree.XMLParser()
-        parser.resolvers.add(FileResolver())
-        xsl = etree.XML(xsl, parser)
+    def build(self, blocks, deps, dir, xbem):
+        xsl = super(BuildHTML, self).build(blocks, deps, dir, xbem)
+        xsl = etree.XML(xsl, base_url="tmp.xsl")
         transform = etree.XSLT(xsl)
         return str(transform(xbem.xml))
 
@@ -188,18 +181,10 @@ class BuildJS(BuildConcat):
     ALLOW_COMMON = True
     NAME = EXT = "js"
 
-    def get_per_file_record(self, filename, relfilename):
-        return "\n/* Begin of %s. */\n%s\n/* End of %s. */\n" \
-            % (relfilename, open(filename).read(), relfilename)
-
 
 class BuildCSS(BuildConcat):
     ALLOW_COMMON = True
     NAME = EXT = "css"
-
-    def get_per_file_record(self, filename, relfilename):
-        return "\n/* Begin of %s. */\n%s\n/* End of %s. */\n" \
-            % (relfilename, open(filename).read(), relfilename)
 
 
 register_builder(BuildXBEM.NAME, BuildXBEM)
