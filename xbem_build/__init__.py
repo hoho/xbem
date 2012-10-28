@@ -78,10 +78,10 @@ class BuildSettings(object):
 
 
 class XBEM(object):
-    NAMESPACES = {"block": "http://xslc.org/BEM/Block",
-                  "elem": "http://xslc.org/BEM/Element",
-                  "mod": "http://xslc.org/BEM/Modifier",
-                  "decl": "http://xslc.org/BEM/Declaration"}
+    NAMESPACES = {"block": "http://xslc.org/XBEM/Block",
+                  "elem": "http://xslc.org/XBEM/Element",
+                  "mod": "http://xslc.org/XBEM/Modifier",
+                  "decl": "http://xslc.org/XBEM/Declaration"}
     def __init__(self, filename):
         self.xml = etree.parse(filename)
         self._blocks = None
