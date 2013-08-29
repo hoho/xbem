@@ -4,7 +4,7 @@ import os
 from xbem.ns import *
 from xbem.deps import Dependencies
 from xbem.exceptions import *
-from xbem.tools import get_node_text
+from xbem.tools import get_node_text, read_file
 
 PROPERTY_STRING = 1
 PROPERTY_EXISTING_FILE = 2
@@ -109,25 +109,59 @@ class BundleBuildTech(AbstractBuildTech):
         return deps.get_filenames(self.NAME, self.bundle.name)
 
 
-class CSSBundleBuildTech(BundleBuildTech):
+class ConcatFilesBuildTech(BundleBuildTech):
+    @abstractmethod
+    def get_file_comment(self, filename):
+        pass
+
+    def build(self, deps, rels):
+        filenames = self.get_filenames(deps)
+        if len(filenames) == 0:
+            raise Exception("No %s files for bundle '%s'" %
+                            (self.NAME, self.bundle.name))
+
+        filename = self.props["out"]
+        base = os.path.dirname(filename)
+        if not os.path.isdir(base):
+            os.makedirs(base, mode=0755)
+
+        out = open(filename, "w")
+
+        for f in filenames:
+            out.write("%s\n" % self.get_file_comment(f))
+            out.write(read_file(f))
+            out.write("\n\n")
+
+
+class CSSBundleBuildTech(ConcatFilesBuildTech):
     NAME = "css"
 
-    def build(self, deps, rels):
-        pass
+    def get_file_comment(self, filename):
+        return "/* %s */\n" % filename
 
 
-class JSBundleBuildTech(BundleBuildTech):
+class JSBundleBuildTech(ConcatFilesBuildTech):
     NAME = "js"
 
-    def build(self, deps, rels):
-        pass
+    def get_file_comment(self, filename):
+        return "/* %s */\n" % filename
 
 
 class ImageBundleBuildTech(BundleBuildTech):
     NAME = "image"
 
     def build(self, deps, rels):
-        pass
+        filenames = self.get_filenames(deps)
+        if len(filenames) == 0:
+            raise Exception("No %s files for bundle '%s'" %
+                            (self.NAME, self.bundle.name))
+
+        base = self.props["out"]
+        if not os.path.isdir(base):
+            os.makedirs(base, mode=0755)
+
+        for f in filenames:
+            read_file(f, os.path.join(base, os.path.basename(f)))
 
 
 class XSLBundleBuildTech(BundleBuildTech):
