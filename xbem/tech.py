@@ -1,8 +1,10 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from xbem import *
-from xbem.exceptions import *
-from xbem.xmltools import get_node_text
 import os
+
+from xbem.ns import *
+from xbem.deps import Dependencies
+from xbem.exceptions import *
+from xbem.tools import get_node_text
 
 PROPERTY_STRING = 1
 PROPERTY_EXISTING_FILE = 2
@@ -60,13 +62,13 @@ class AbstractBuildTech(object):
         print self.props
 
     @abstractmethod
-    def build(self, deps):
+    def build(self, deps, rels):
         pass
 
 
 class BuildTech(AbstractBuildTech):
     @abstractproperty
-    def get_deps(self, blocks_paths):
+    def get_deps(self, blocks_repos):
         pass
 
 
@@ -78,10 +80,14 @@ class XRLBuildTech(BuildTech):
         "out": PROPERTY_NEW_FILE_OR_DIRECTORY
     }
 
-    def get_deps(self, blocks_paths):
-        pass
+    def get_deps(self, blocks_repos):
+        deps = Dependencies(blocks_repos)
+        print blocks_repos
+        deps.append("b-spinner")
+        deps.append("b-cover")
+        return deps
 
-    def build(self, deps):
+    def build(self, deps, rels):
         pass
 
 
@@ -95,30 +101,37 @@ class BundleBuildTech(AbstractBuildTech):
         "rel": PROPERTY_STRING
     }
 
+    def __init__(self, bundle, node):
+        self.bundle = bundle
+        super(BundleBuildTech, self).__init__(node)
+
+    def get_filenames(self, deps):
+        return deps.get_filenames(self.NAME, self.bundle.name)
+
 
 class CSSBundleBuildTech(BundleBuildTech):
     NAME = "css"
 
-    def build(self, deps):
+    def build(self, deps, rels):
         pass
 
 
 class JSBundleBuildTech(BundleBuildTech):
     NAME = "js"
 
-    def build(self, deps):
+    def build(self, deps, rels):
         pass
 
 
 class ImageBundleBuildTech(BundleBuildTech):
     NAME = "image"
 
-    def build(self, deps):
+    def build(self, deps, rels):
         pass
 
 
 class XSLBundleBuildTech(BundleBuildTech):
     NAME = "xsl"
 
-    def build(self, deps):
+    def build(self, deps, rels):
         pass

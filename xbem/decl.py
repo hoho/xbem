@@ -1,11 +1,12 @@
-from xbem import *
-from xbem.exceptions import *
-from xbem.xmltools import get_node_text
 from abc import ABCMeta, abstractproperty
+
+from xbem.ns import *
+from xbem.exceptions import *
+from xbem.tools import get_node_text, parse_xml, read_file, get_path
 
 
 class BlockFile(object):
-    def __init__(self, node):
+    def __init__(self, block_filename, node):
         if node.namespaceURI != XBEM_DECL_NAMESPACE:
             raise UnexpectedNodeException(node)
 
@@ -20,7 +21,7 @@ class BlockFile(object):
                 raise UnexpectedNodeException(node)
             if node.localName == "file":
                 if self.file is None:
-                    self.file = get_node_text(node)
+                    self.file = get_path(block_filename, get_node_text(node))
                 else:
                     raise UnexpectedNodeException(node)
             elif node.localName == "bundle":
@@ -166,7 +167,8 @@ class DependencyBlock(DependencyWithModifiers):
 class DeclarationWithFilesAndDeps(Declaration):
     NAMESPACE2 = XBEM_DEP_NAMESPACE
 
-    def __init__(self, node):
+    def __init__(self, filename, node):
+        self.filename = filename
         self.files = []
         self.deps = []
         super(DeclarationWithFilesAndDeps, self).__init__(node)
@@ -177,7 +179,7 @@ class DeclarationWithFilesAndDeps(Declaration):
                 node = node.firstChild
 
                 while node is not None:
-                    self.files.append(BlockFile(node))
+                    self.files.append(BlockFile(self.filename, node))
                     node = node.nextSibling
 
                 return True
@@ -194,9 +196,9 @@ class DeclarationWithFilesAndDeps(Declaration):
 class DeclarationModifier(DeclarationWithFilesAndDeps):
     LOCAL_NAME = "modifier"
 
-    def __init__(self, node):
+    def __init__(self, filename, node):
         self.value = None
-        super(DeclarationModifier, self).__init__(node)
+        super(DeclarationModifier, self).__init__(filename, node)
 
     def __repr__(self):
         return "DeclarationModifier(name: '%s', value: '%s', deps: %s, "     \
@@ -218,14 +220,14 @@ class DeclarationModifier(DeclarationWithFilesAndDeps):
 
 
 class DeclarationWithFilesDepsAndMods(DeclarationWithFilesAndDeps):
-    def __init__(self, node):
+    def __init__(self, filename, node):
         self.mods = []
-        super(DeclarationWithFilesDepsAndMods, self).__init__(node)
+        super(DeclarationWithFilesDepsAndMods, self).__init__(filename, node)
 
     def node_action(self, node):
         if not super(DeclarationWithFilesDepsAndMods, self).node_action(node):
             if node.localName == "modifier":
-                self.mods.append(DeclarationModifier(node))
+                self.mods.append(DeclarationModifier(self.filename, node))
                 return True
             else:
                 return False
@@ -245,9 +247,10 @@ class DeclarationElement(DeclarationWithFilesDepsAndMods):
 class DeclarationBlock(DeclarationWithFilesDepsAndMods):
     LOCAL_NAME = "block"
 
-    def __init__(self, node):
+    def __init__(self, filename):
         self.elements = []
-        super(DeclarationBlock, self).__init__(node)
+        block_xbem = parse_xml(filename, read_file(filename))
+        super(DeclarationBlock, self).__init__(filename, block_xbem.firstChild)
 
     def __repr__(self):
         return "DeclarationBlock(\n\t"                                       \
@@ -261,7 +264,7 @@ class DeclarationBlock(DeclarationWithFilesDepsAndMods):
     def node_action(self, node):
         if not super(DeclarationBlock, self).node_action(node):
             if node.localName == "element":
-                self.elements.append(DeclarationElement(node))
+                self.elements.append(DeclarationElement(self.filename, node))
                 return True
             else:
                 return False

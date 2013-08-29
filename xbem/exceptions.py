@@ -43,3 +43,10 @@ class CustomNodeException(NodeException):
 class UnknownTechNodeException(NodeException):
     def get_message(self):
         return "Unknown tech"
+
+
+class UnsupportedScheme(Exception):
+    def __init__(self, scheme, filename):
+        super(UnsupportedScheme, self).__init__(
+            "Unsupported scheme '%s' in '%s' filename" % (scheme, filename)
+        )

@@ -1,11 +1,12 @@
 import os
 
-from xbem import *
+from xbem.ns import *
 from xbem.exceptions import *
-from xbem.xmltools import parse_xml, get_node_text
+from xbem.tools import parse_xml, get_node_text
 from xbem.tech import (XRLBuildTech, XSLBuildTech, CSSBundleBuildTech,
                        JSBundleBuildTech, ImageBundleBuildTech,
                        XSLBundleBuildTech)
+from xbem.repo import Repository
 
 
 REGISTERED_TECHS = {
@@ -46,27 +47,27 @@ class BuildBundle(object):
                 tech = REGISTERED_BUNDLE_TECHS.get(tmp.localName)
                 if tech is None:
                     raise UnknownTechNodeException(tmp)
-                self.techs.append(tech(tmp))
+                self.techs.append(tech(self, tmp))
 
             tmp = tmp.nextSibling
 
         if self.name is None:
             raise NoNameNodeException(node)
 
-    def build(self, deps):
+    def build(self, deps, rels):
         for tech in self.techs:
-            tech.build(deps)
+            tech.build(deps, rels)
 
 
 class BuildSection(object):
-    def __init__(self, node, block_paths=None):
+    def __init__(self, node, repo=None):
         if node.namespaceURI != XBEM_BUILD_NAMESPACE:
             raise UnexpectedNodeException(node)
         if node.localName != 'build':
             raise UnexpectedNodeException(node)
 
         self._deps = None
-        self.blocks_paths = [] if block_paths is None else block_paths[:]
+        self.repo = Repository(repo)
         self.subsections = []
         self.bundles = []
         self.techs = []
@@ -78,14 +79,9 @@ class BuildSection(object):
                 raise UnexpectedNodeException(node)
 
             if node.localName == "blocks":
-                b = os.path.normpath(os.path.abspath(get_node_text(node)))
-                if not os.path.isdir(b):
-                    raise CustomNodeException(
-                        node, "'%s' is not a directory" % b
-                    )
-                self.blocks_paths.append(b)
+                self.repo.add_source(get_node_text(node))
             elif node.localName == "build":
-                self.subsections.append(BuildSection(node))
+                self.subsections.append(BuildSection(node, self.repo))
             elif node.localName == "bundle":
                 self.bundles.append(BuildBundle(node))
             else:
@@ -97,19 +93,24 @@ class BuildSection(object):
             node = node.nextSibling
 
     def build(self):
-        self.blocks_paths.reverse()
-
         for subsection in self.subsections:
             subsection.build()
             self.add_deps(subsection.get_deps())
 
+        rels = {}
+        for bundle in self.bundles:
+            for tech in bundle.techs:
+                rel = tech.props.get("rel")
+                if rel is not None:
+                    rels["%s:%s" % (bundle.name, tech.NAME)] = rel
+
         for tech in self.techs:
-            deps = tech.get_deps(self.blocks_paths)
-            tech.build(deps)
+            deps = tech.get_deps(self.repo)
+            tech.build(deps, rels)
             self.add_deps(deps)
 
         for bundle in self.bundles:
-            bundle.build(self.get_deps())
+            bundle.build(self.get_deps(), rels)
 
     def add_deps(self, deps):
         if self._deps is None:
@@ -122,6 +123,10 @@ class BuildSection(object):
 
 
 def build(filename):
+    cwd = os.getcwd()
+    base = os.path.dirname(os.path.abspath(filename))
+    os.chdir(base)
     build_config = parse_xml(filename)
     build = BuildSection(build_config.firstChild)
     build.build()
+    os.chdir(cwd)
