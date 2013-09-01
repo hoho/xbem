@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema
+        attributeFormDefault="unqualified"
+        elementFormDefault="qualified"
+        targetNamespace="http://xslc.org/XBEM/Dependency"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:dep="http://xslc.org/XBEM/Dependency">
+
+    <xsd:element name="block">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="name" type="xsd:string" />
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element name="element">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="name" type="xsd:string" />
+                                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                                    <xsd:element name="modifier" type="dep:modifierElement" />
+                                </xsd:choice>
+                            </xsd:sequence>
+                        </xsd:complexType>
+                    </xsd:element>
+                    <xsd:element name="modifier" type="dep:modifierElement" />
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+
+
+    <xsd:complexType name="modifierElement">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string" />
+            <xsd:element name="value" type="xsd:string" minOccurs="0" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>
