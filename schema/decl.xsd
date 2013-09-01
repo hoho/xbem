@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema
+        attributeFormDefault="unqualified"
+        elementFormDefault="qualified"
+        targetNamespace="http://xslc.org/XBEM/Declaration"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:decl="http://xslc.org/XBEM/Declaration">
+
+    <xsd:element name="block">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="name" type="xsd:string" />
+                <xsd:choice minOccurs="1" maxOccurs="unbounded">
+                    <xsd:element name="files" type="decl:filesElement" />
+                    <xsd:element name="modifier" type="decl:modifierElement" />
+                    <xsd:element name="element">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="name" type="xsd:string" />
+                                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                                    <xsd:element name="files" type="decl:filesElement" />
+                                    <xsd:element name="modifier" type="decl:modifierElement" />
+                                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+                                </xsd:choice>
+                            </xsd:sequence>
+                        </xsd:complexType>
+                    </xsd:element>
+                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+
+
+    <xsd:complexType name="filesElement">
+        <xsd:sequence>
+            <xsd:group ref="decl:fileTypes" minOccurs="1" maxOccurs="unbounded" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="fileElement">
+        <xsd:all>
+            <xsd:element name="file" type="xsd:string" />
+            <xsd:element name="bundle" type="xsd:string" />
+        </xsd:all>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="modifierElement">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string" />
+            <xsd:element name="value" type="xsd:string" minOccurs="0" />
+            <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                <xsd:element name="files" type="decl:filesElement" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:group name="fileTypes">
+        <xsd:choice>
+            <xsd:element name="js" type="decl:fileElement" />
+            <xsd:element name="css" type="decl:fileElement" />
+            <xsd:element name="image" type="decl:fileElement" />
+            <xsd:element name="xsl" type="decl:fileElement" />
+        </xsd:choice>
+    </xsd:group>
+
+</xsd:schema>
