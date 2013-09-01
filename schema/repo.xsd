@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema
+        targetNamespace="http://xslc.org/XBEM/Repository"
+        elementFormDefault="qualified"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    
+    <xsd:element name="blocks">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="block" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="name" type="xsd:string" />
+                            <xsd:element name="file" type="xsd:string" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
