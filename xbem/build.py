@@ -78,7 +78,7 @@ class BuildSection(object):
             if node.namespaceURI != XBEM_BUILD_NAMESPACE:
                 raise UnexpectedNodeException(node)
 
-            if node.localName == "blocks":
+            if node.localName == "repository":
                 self.repo.add_source(get_node_text(node))
             elif node.localName == "build":
                 self.subsections.append(BuildSection(node, self.repo))

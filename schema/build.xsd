@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema
+        attributeFormDefault="unqualified"
+        elementFormDefault="qualified"
+        targetNamespace="http://xslc.org/XBEM/Build"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:build="http://xslc.org/XBEM/Build">
+
+    <xsd:element name="build">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:group ref="build:buildElements" />
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="required" />
+        </xsd:complexType>
+    </xsd:element>
+
+
+    <xsd:complexType name="buildElement">
+        <xsd:sequence>
+            <xsd:group ref="build:buildElements" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="bundleElement">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string" />
+            <xsd:group ref="build:bundleBuildTechs" minOccurs="1" maxOccurs="unbounded" />
+        </xsd:sequence>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="bundleFileElement">
+        <xsd:all>
+            <xsd:element name="out" type="xsd:string" />
+            <xsd:element name="rel" type="xsd:string" />
+        </xsd:all>
+    </xsd:complexType>
+
+
+    <xsd:group name="buildElements">
+        <xsd:sequence>
+            <xsd:element name="repository" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:choice minOccurs="1" maxOccurs="unbounded">
+                <xsd:group ref="build:buildTechs" />
+                <xsd:element name="build" type="build:buildElement" />
+                <xsd:element name="bundle" type="build:bundleElement" />
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:group>
+
+
+    <xsd:group name="buildTechs">
+        <xsd:choice>
+            <xsd:element name="xrl">
+                <xsd:complexType>
+                    <xsd:all>
+                        <xsd:element name="file" type="xsd:string" />
+                        <xsd:element name="templates" type="xsd:string" />
+                        <xsd:element name="out" type="xsd:string" />
+                    </xsd:all>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:group>
+
+
+    <xsd:group name="bundleBuildTechs">
+        <xsd:choice>
+            <xsd:element name="js" type="build:bundleFileElement" />
+            <xsd:element name="css" type="build:bundleFileElement" />
+            <xsd:element name="image" type="build:bundleFileElement" />
+        </xsd:choice>
+    </xsd:group>
+
+</xsd:schema>
