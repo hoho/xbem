@@ -24,7 +24,6 @@
                     <xsd:element name="modifier" type="dep:modifierElement" />
                 </xsd:choice>
             </xsd:sequence>
-            <xsd:attribute name="version" type="xsd:string" use="required" />
         </xsd:complexType>
     </xsd:element>
 

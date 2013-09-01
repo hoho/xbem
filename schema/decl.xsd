@@ -20,12 +20,12 @@
                                 <xsd:choice minOccurs="0" maxOccurs="unbounded">
                                     <xsd:element name="files" type="decl:filesElement" />
                                     <xsd:element name="modifier" type="decl:modifierElement" />
-                                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+                                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="strict" />
                                 </xsd:choice>
                             </xsd:sequence>
                         </xsd:complexType>
                     </xsd:element>
-                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+                    <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="strict" />
                 </xsd:choice>
             </xsd:sequence>
             <xsd:attribute name="version" type="xsd:string" use="required" />
@@ -54,7 +54,7 @@
             <xsd:element name="value" type="xsd:string" minOccurs="0" />
             <xsd:choice minOccurs="0" maxOccurs="unbounded">
                 <xsd:element name="files" type="decl:filesElement" minOccurs="0" maxOccurs="unbounded" />
-                <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="lax" />
+                <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="strict" />
             </xsd:choice>
         </xsd:sequence>
     </xsd:complexType>
