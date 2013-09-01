@@ -9,10 +9,10 @@
             <xsd:sequence>
                 <xsd:element name="block" minOccurs="0" maxOccurs="unbounded">
                     <xsd:complexType>
-                        <xsd:sequence>
+                        <xsd:all>
                             <xsd:element name="name" type="xsd:string" />
                             <xsd:element name="file" type="xsd:string" />
-                        </xsd:sequence>
+                        </xsd:all>
                     </xsd:complexType>
                 </xsd:element>
             </xsd:sequence>
