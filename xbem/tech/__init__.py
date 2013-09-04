@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import os
 
 from xbem.ns import *
-from xbem.deps import Dependencies
 from xbem.exceptions import *
 from xbem.tools import get_node_text, read_file
 
@@ -59,10 +58,8 @@ class AbstractBuildTech(object):
 
             node = node.nextSibling
 
-        print self.props
-
     @abstractmethod
-    def build(self, deps, rels):
+    def build(self, deps):
         pass
 
 
@@ -70,29 +67,6 @@ class BuildTech(AbstractBuildTech):
     @abstractproperty
     def get_deps(self, blocks_repos):
         pass
-
-
-class XRLBuildTech(BuildTech):
-    NAME = "xrl"
-    PROPERTIES = {
-        "file": PROPERTY_EXISTING_FILE,
-        "templates": PROPERTY_DIRECTORY,
-        "out": PROPERTY_NEW_FILE_OR_DIRECTORY
-    }
-
-    def get_deps(self, blocks_repos):
-        deps = Dependencies(blocks_repos)
-        print blocks_repos
-        deps.append("b-spinner")
-        deps.append("b-cover")
-        return deps
-
-    def build(self, deps, rels):
-        pass
-
-
-class XSLBuildTech(BuildTech):
-    pass
 
 
 class BundleBuildTech(AbstractBuildTech):
@@ -109,12 +83,12 @@ class BundleBuildTech(AbstractBuildTech):
         return deps.get_filenames(self.NAME, self.bundle.name)
 
 
-class ConcatFilesBuildTech(BundleBuildTech):
+class ConcatFilesBundleBuildTech(BundleBuildTech):
     @abstractmethod
     def get_file_comment(self, filename):
         pass
 
-    def build(self, deps, rels):
+    def build(self, deps):
         filenames = self.get_filenames(deps)
         if len(filenames) == 0:
             raise Exception("No %s files for bundle '%s'" %
@@ -131,41 +105,3 @@ class ConcatFilesBuildTech(BundleBuildTech):
             out.write("%s\n" % self.get_file_comment(f))
             out.write(read_file(f))
             out.write("\n\n")
-
-
-class CSSBundleBuildTech(ConcatFilesBuildTech):
-    NAME = "css"
-
-    def get_file_comment(self, filename):
-        return "/* %s */\n" % filename
-
-
-class JSBundleBuildTech(ConcatFilesBuildTech):
-    NAME = "js"
-
-    def get_file_comment(self, filename):
-        return "/* %s */\n" % filename
-
-
-class ImageBundleBuildTech(BundleBuildTech):
-    NAME = "image"
-
-    def build(self, deps, rels):
-        filenames = self.get_filenames(deps)
-        if len(filenames) == 0:
-            raise Exception("No %s files for bundle '%s'" %
-                            (self.NAME, self.bundle.name))
-
-        base = self.props["out"]
-        if not os.path.isdir(base):
-            os.makedirs(base, mode=0755)
-
-        for f in filenames:
-            read_file(f, os.path.join(base, os.path.basename(f)))
-
-
-class XSLBundleBuildTech(BundleBuildTech):
-    NAME = "xsl"
-
-    def build(self, deps, rels):
-        pass
