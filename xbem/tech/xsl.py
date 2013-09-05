@@ -1,6 +1,5 @@
 from os import path
 
-from xbem.deps import Dependencies
 from xbem.tools import parse_xml, create_subdirectories
 from xbem.ns import XBEM_BLOCK_NAMESPACE
 from xbem.tech import (BuildTech,
