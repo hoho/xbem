@@ -7,7 +7,7 @@ from xbem.tools import read_file
 class ImageBundleBuildTech(BundleBuildTech):
     NAME = "image"
 
-    def build(self, deps):
+    def build(self, deps, blocks_repos):
         filenames = self.get_filenames(deps)
         if len(filenames) == 0:
             raise Exception("No %s files for bundle '%s'" %

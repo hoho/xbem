@@ -3,7 +3,8 @@ import os
 
 from xbem.ns import *
 from xbem.exceptions import *
-from xbem.tools import get_node_text, read_file
+from xbem.deps import Dependencies
+from xbem.tools import get_node_text, read_file, create_subdirectories
 
 PROPERTY_STRING = 1
 PROPERTY_EXISTING_FILE = 2
@@ -59,13 +60,13 @@ class AbstractBuildTech(object):
             node = node.nextSibling
 
     @abstractmethod
-    def build(self, deps):
+    def build(self, deps, repo):
         pass
 
 
 class BuildTech(AbstractBuildTech):
     @abstractproperty
-    def get_deps(self, blocks_repos):
+    def get_deps(self, repo):
         pass
 
 
@@ -88,20 +89,121 @@ class ConcatFilesBundleBuildTech(BundleBuildTech):
     def get_file_comment(self, filename):
         pass
 
-    def build(self, deps):
+    def build(self, deps, repo):
         filenames = self.get_filenames(deps)
         if len(filenames) == 0:
             raise Exception("No %s files for bundle '%s'" %
                             (self.NAME, self.bundle.name))
-
         filename = self.props["out"]
-        base = os.path.dirname(filename)
-        if not os.path.isdir(base):
-            os.makedirs(base, mode=0755)
-
+        create_subdirectories(filename)
         out = open(filename, "w")
-
         for f in filenames:
             out.write("%s\n" % self.get_file_comment(f))
             out.write(read_file(f))
             out.write("\n\n")
+        out.close()
+
+
+class XMLDependenciesExtractor(object):
+    def __init__(self, repo, node, no_imports=False):
+        self.no_imports = no_imports
+        self.deps = Dependencies(repo)
+        self.extract(node)
+
+    def get_deps(self):
+        return self.deps
+
+    def other(self, node, namespaces):
+        pass
+
+    def extract(self, node, namespaces=None):
+        if node is None:
+            return
+        if namespaces is None:
+            namespaces = {}
+        newnamespaces = {}
+
+        attrs = node.attributes
+        if attrs is not None:
+            for i in xrange(attrs.length):
+                attr = attrs.item(i)
+                if attr.prefix == "xmlns":
+                    ns = namespaces.get(attr.value)
+                    if ns is None or attr.localName not in ns:
+                        newns = newnamespaces.get(attr.value)
+                        if newns is None:
+                            newnamespaces[attr.value] = set([attr.localName])
+                        else:
+                            newns.add(attr.localName)
+
+        for ns, newprefixes in newnamespaces.iteritems():
+            prefixes = namespaces.get(ns)
+            namespaces[ns] = newprefixes if prefixes is None else \
+                             prefixes.union(newprefixes)
+
+        self._extract_callback(node, namespaces)
+
+        tmp = node.firstChild
+        while tmp is not None:
+            self.extract(tmp, namespaces)
+            tmp = tmp.nextSibling
+
+        for ns, newprefixes in newnamespaces.iteritems():
+            prefixes = namespaces.get(ns)
+            if prefixes == newprefixes:
+                del namespaces[ns]
+            else:
+                namespaces[ns] -= prefixes
+
+    def _extract_callback(self, node, namespaces):
+        b = namespaces.get(XBEM_BLOCK_NAMESPACE) or set()
+        e = namespaces.get(XBEM_ELEMENT_NAMESPACE) or set()
+        if node.prefix not in b and node.prefix not in e:
+            self.other(node, namespaces)
+            return
+
+        m = namespaces.get(XBEM_MODIFIER_NAMESPACE)
+        block_name = elem_name = None
+        mods = []
+
+        if node.prefix in b and node.localName != "block":
+            raise UnexpectedNodeException(node)
+        elif node.prefix in e and node.localName != "element":
+            raise UnexpectedNodeException(node)
+
+        for i in xrange(node.attributes.length):
+            attr = node.attributes.item(i)
+            unexpected = False
+
+            if attr.prefix in b:
+                if attr.localName == "name" and block_name is None:
+                    block_name = attr.value
+                else:
+                    unexpected = True
+            elif attr.prefix in e:
+                if attr.localName == "name" and elem_name is None:
+                    elem_name = attr.value
+                else:
+                    unexpected = True
+            elif attr.prefix in m:
+                mods.append((attr.localName, attr.value))
+
+            if unexpected:
+                raise CustomNodeException(node,
+                                          "Unexpected '%s:%s' attribute" %
+                                          (attr.prefix, attr.localName))
+
+        if block_name is None:
+            raise CustomNodeException(node, "No block name")
+        if node.prefix in e and elem_name is None:
+            raise CustomNodeException(node, "No element name")
+
+        self.deps.append(block_name)
+
+        if elem_name is not None:
+            self.deps.append(block_name, elem_name)
+
+        for mod, val in mods:
+            self.deps.append(block_name, elem_name, mod)
+            if val:
+                self.deps.append(block_name, elem_name, mod, val)

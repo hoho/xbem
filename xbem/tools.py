@@ -23,7 +23,7 @@ def _set_content_handler(dom_handler):
     orig_set_content_handler(dom_handler)
 
 
-def remove_empty_text_nodes(node):
+def _remove_blank_nodes(node):
     tmp = node.firstChild
 
     while tmp is not None:
@@ -32,17 +32,18 @@ def remove_empty_text_nodes(node):
             node.removeChild(tmp)
             tmp = tmp2
         else:
-            remove_empty_text_nodes(tmp)
+            _remove_blank_nodes(tmp)
             tmp = tmp.nextSibling
 
 
-def parse_xml(filename, string=None):
+def parse_xml(filename, string=None, remove_blank_nodes=True):
     parser._xml_filename = filename
     if string is None:
         ret = minidom.parse(filename, parser)
     else:
         ret = minidom.parseString(string, parser)
-    remove_empty_text_nodes(ret.firstChild)
+    if remove_blank_nodes:
+        _remove_blank_nodes(ret.firstChild)
     return ret
 
 
@@ -111,3 +112,10 @@ def read_file(filename, save_to_file=None):
     f.close()
 
     return ret
+
+
+def create_subdirectories(path, is_filename=True):
+    if is_filename:
+        path = os.path.dirname(path)
+    if not os.path.isdir(path):
+        os.makedirs(path, mode=0755)

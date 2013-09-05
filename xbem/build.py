@@ -48,9 +48,9 @@ class BuildBundle(object):
         if self.name is None:
             raise NoNameNodeException(node)
 
-    def build(self, deps):
+    def build(self, deps, repo):
         for tech in self.techs:
-            tech.build(deps)
+            tech.build(deps, repo)
 
     def get_rel(self, tech_name):
         tech = self._tech_by_name.get(tech_name)
@@ -98,11 +98,11 @@ class BuildSection(object):
 
         for tech in self.techs:
             deps = tech.get_deps(self.repo)
-            tech.build(deps)
+            tech.build(deps, self.repo)
             self.add_deps(deps)
 
         for bundle in self.bundles:
-            bundle.build(self.get_deps())
+            bundle.build(self.get_deps(), self.repo)
 
     def add_deps(self, deps):
         if self._deps is None:
