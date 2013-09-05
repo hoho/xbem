@@ -8,6 +8,8 @@ from xbem.tech import (BuildTech,
                        PROPERTY_DIRECTORY,
                        PROPERTY_NEW_FILE_OR_DIRECTORY)
 
+XRLT_NAMESPACE = "http://xrlt.net/Transform"
+
 
 class XRLSaveWithImports(XSLSaveWithImports):
     def __init__(self, repo, filename, out, templates):
@@ -20,7 +22,7 @@ class XRLSaveWithImports(XSLSaveWithImports):
         return
 
     def fix_import(self, node):
-        if node.namespaceURI == "http://xrlt.net/Transform":
+        if node.namespaceURI == XRLT_NAMESPACE:
             if node.localName == "import":
                 href = self.get_import_abspath(node.getAttribute("href"))
                 newhref = self.get_next_filename()
@@ -51,8 +53,7 @@ class XRLSaveWithImports(XSLSaveWithImports):
 
 class XRLDependenciesExtractor(XMLDependenciesExtractor):
     def other(self, node, namespaces):
-        if node.namespaceURI == "http://xrlt.net/Transform" and \
-           node.localName == "import":
+        if node.namespaceURI == XRLT_NAMESPACE and node.localName == "import":
             filename = node.filename
             href = node.getAttribute("href")
             href = path.normpath(path.join(path.dirname(filename), href))
