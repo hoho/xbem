@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema
+        attributeFormDefault="qualified"
+        elementFormDefault="qualified"
+        targetNamespace="http://xslc.org/XBEM/Element"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:b="http://xslc.org/XBEM/Block">
+
+    <xsd:import schemaLocation="block.xsd" namespace="http://xslc.org/XBEM/Block" />
+
+    <xsd:element name="element">
+        <xsd:complexType>
+            <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+                <xsd:any processContents="lax" />
+            </xsd:sequence>
+            <xsd:attribute ref="b:name" use="required" />
+            <xsd:attribute name="name" type="xsd:string" use="required" />
+            <xsd:anyAttribute namespace="##any" processContents="skip" />
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
