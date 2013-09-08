@@ -41,6 +41,7 @@
 
     <xsd:group name="buildElements">
         <xsd:sequence>
+            <xsd:element name="cache" type="xsd:string" minOccurs="0" />
             <xsd:element name="repository" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
             <xsd:choice minOccurs="1" maxOccurs="unbounded">
                 <xsd:group ref="build:buildTechs" />
