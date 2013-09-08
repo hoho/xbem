@@ -67,6 +67,7 @@ class BuildSection(object):
 
         self._deps = None
         self.repo = Repository(repo)
+        self.cache_path = None
         self.subsections = []
         self.bundles = []
         self.techs = []
@@ -79,6 +80,8 @@ class BuildSection(object):
 
             if node.localName == "repository":
                 self.repo.add_source(get_node_text(node))
+            elif node.localName == "cache":
+                self.cache_path = os.path.abspath(get_node_text(node))
             elif node.localName == "build":
                 self.subsections.append(BuildSection(node, self.repo))
             elif node.localName == "bundle":
