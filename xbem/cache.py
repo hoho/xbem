@@ -1,14 +1,16 @@
 import urlparse
 
 
-class FileCache(object):
-    _instance = None
+class Cache(object):
+    _caches = {}
 
-    def __new__(cls, *args):
-        if FileCache._instance is None:
-            cls._instance = self = super(FileCache, cls).__new__(cls, *args)
+    def __new__(cls, path):
+        self = cls._caches.get(path)
+        if self is None:
+            cls._caches[path] = self = super(Cache, cls).__new__(cls)
+            self.path = path
             self._cache = {}
-        return FileCache._instance
+        return self
 
     def get_file_content(self, filename):
         cached = self._cache.get(filename)

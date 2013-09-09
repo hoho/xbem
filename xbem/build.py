@@ -6,6 +6,7 @@ from xbem.ns import *
 from xbem.exceptions import *
 from xbem.tools import parse_xml, get_node_text
 from xbem.repo import Repository
+from xbem.cache import Cache
 import xbem.tech
 
 
@@ -59,15 +60,22 @@ class BuildBundle(object):
 
 
 class BuildSection(object):
-    def __init__(self, node, repo=None):
+    def __init__(self, node, parent=None):
         if node.namespaceURI != XBEM_BUILD_NAMESPACE:
             raise UnexpectedNodeException(node)
         if node.localName != 'build':
             raise UnexpectedNodeException(node)
 
+        self.parent = parent
+
+        if parent is None:
+            self.repo = Repository()
+            self.cache = None
+        else:
+            self.repo = Repository(parent.repo)
+            self.cache = parent.cache
+
         self._deps = None
-        self.repo = Repository(repo)
-        self.cache_path = None
         self.subsections = []
         self.bundles = []
         self.techs = []
@@ -81,9 +89,9 @@ class BuildSection(object):
             if node.localName == "repository":
                 self.repo.add_source(get_node_text(node))
             elif node.localName == "cache":
-                self.cache_path = os.path.abspath(get_node_text(node))
+                self.cache = Cache(os.path.abspath(get_node_text(node)))
             elif node.localName == "build":
-                self.subsections.append(BuildSection(node, self.repo))
+                self.subsections.append(BuildSection(node, self))
             elif node.localName == "bundle":
                 self.bundles.append(BuildBundle(node))
             else:
