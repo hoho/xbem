@@ -70,7 +70,6 @@ class RepositorySource(object):
             }
 
             node = node.nextSibling
-        print self.blocks
 
     def get_block(self, name):
         block = self.blocks.get(name)
