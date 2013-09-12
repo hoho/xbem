@@ -1,13 +1,14 @@
 import os
 from distutils.core import setup
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+def read(filename):
+    return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 
 setup(
     name="xbem",
-    version="0.1.0",
+    version="0.1.1",
     author="Marat Abdullin",
     author_email="dakota@brokenpipe.ru",
     description=("Build utility for XBEM files."),

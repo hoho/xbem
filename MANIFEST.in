@@ -1,0 +1,6 @@
+include README.* setup.py setup.cfg
+recursive-include xbem *.py
+recursive-include schema *.xsd
+global-exclude *.pyc
+global-exclude *.pyo
+
