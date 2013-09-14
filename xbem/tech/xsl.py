@@ -31,8 +31,9 @@ class XSLDependenciesExtractor(XMLDependenciesExtractor):
 
 
 class XSLSaveWithImports(object):
-    def __init__(self, repo, filename, out):
+    def __init__(self, repo, deps, filename, out):
         self.repo = repo
+        self.deps = deps
         self.filename = filename
         self.out = out
         self._number = -1
@@ -47,6 +48,8 @@ class XSLSaveWithImports(object):
     def insert_deps(self, doc):
         e = XSLDependenciesExtractor(self.repo, doc.firstChild, True)
         deps = e.get_deps()
+        if self.deps is not None:
+            deps += self.deps
         for filename in deps.get_filenames("xsl")[::-1]:
             ie = doc.createElementNS(XSLT_NAMESPACE, "import")
             ie.setAttribute("href", filename)
@@ -58,7 +61,7 @@ class XSLSaveWithImports(object):
             href = self.get_import_abspath(node.getAttribute("href"))
             newhref = self.get_next_filename()
             node.setAttribute("href", newhref)
-            XSLSaveWithImports(self.repo, href, newhref)
+            XSLSaveWithImports(self.repo, None, href, newhref)
             return True
         else:
             return False
@@ -91,7 +94,7 @@ class XSLBuildTech(BuildTech):
         return extractor.get_deps()
 
     def build(self, deps, repo):
-        XSLSaveWithImports(self.props["file"], self.props["out"])
+        XSLSaveWithImports(repo, deps, self.props["file"], self.props["out"])
 
 
 class XSLBundleBuildTech(BundleBuildTech):

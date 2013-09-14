@@ -12,11 +12,11 @@ XRLT_NAMESPACE = "http://xrlt.net/Transform"
 
 
 class XRLSaveWithImports(XSLSaveWithImports):
-    def __init__(self, repo, filename, out, templates):
+    def __init__(self, repo, deps, filename, out, templates):
         self.templates = templates
         self._xslnumber = -1
         create_subdirectories(templates, is_filename=False)
-        super(XRLSaveWithImports, self).__init__(repo, filename, out)
+        super(XRLSaveWithImports, self).__init__(repo, deps, filename, out)
 
     def insert_deps(self, doc):
         return
@@ -27,7 +27,7 @@ class XRLSaveWithImports(XSLSaveWithImports):
                 href = self.get_import_abspath(node.getAttribute("href"))
                 newhref = self.get_next_filename()
                 node.setAttribute("href", newhref)
-                XRLSaveWithImports(self.repo, href, newhref,
+                XRLSaveWithImports(self.repo, self.deps, href, newhref,
                                    self.templates)
                 return True
             elif node.localName == "transformation" and \
@@ -35,7 +35,7 @@ class XRLSaveWithImports(XSLSaveWithImports):
                 src = self.get_import_abspath(node.getAttribute("src"))
                 newsrc = self.get_next_filename(True)
                 node.setAttribute("src", newsrc)
-                XSLSaveWithImports(self.repo, src, newsrc)
+                XSLSaveWithImports(self.repo, self.deps, src, newsrc)
                 return True
         return False
 
@@ -75,5 +75,5 @@ class XRLBuildTech(BuildTech):
         return extractor.get_deps()
 
     def build(self, deps, repo):
-        XRLSaveWithImports(repo, self.props["file"], self.props["out"],
+        XRLSaveWithImports(repo, deps, self.props["file"], self.props["out"],
                            self.props["templates"])
