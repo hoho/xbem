@@ -51,7 +51,7 @@ class XSLSaveWithImports(object):
         if self.deps is not None:
             deps += self.deps
         for filename in deps.get_filenames("xsl")[::-1]:
-            ie = doc.createElementNS(XSLT_NAMESPACE, "import")
+            ie = doc.createElementNS(XSLT_NAMESPACE, "xsl:import")
             ie.setAttribute("href", filename)
             doc.firstChild.insertBefore(ie, doc.firstChild.firstChild)
 

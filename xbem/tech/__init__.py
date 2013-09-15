@@ -166,25 +166,22 @@ class XMLDependenciesExtractor(object):
         block_name = elem_name = None
         mods = []
 
-        if node.prefix in b and node.localName != "block":
-            raise UnexpectedNodeException(node)
-        elif node.prefix in e and node.localName != "element":
-            raise UnexpectedNodeException(node)
+        if node.prefix in b:
+            block_name = node.localName
+        elif node.prefix in e:
+            elem_name = node.localName
 
         for i in xrange(node.attributes.length):
             attr = node.attributes.item(i)
             unexpected = False
 
             if attr.prefix in b:
-                if attr.localName == "name" and block_name is None:
+                if attr.localName == "block" and block_name is None:
                     block_name = attr.value
                 else:
                     unexpected = True
             elif attr.prefix in e:
-                if attr.localName == "name" and elem_name is None:
-                    elem_name = attr.value
-                else:
-                    unexpected = True
+                unexpected = True
             elif attr.prefix in m:
                 mods.append((attr.localName, attr.value))
 

@@ -133,7 +133,6 @@ def build(filename):
     build = BuildSection(build_config.firstChild)
     build.build()
     os.chdir(cwd)
-    raise
 
 
 # Dynamically load technologies from xbem.tech.* submodules.
