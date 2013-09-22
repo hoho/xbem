@@ -28,6 +28,9 @@ class Dependencies(object):
                     i = j + 1
                 merged_deps.append(dep)
 
+            if i < len(other._deps):
+                merged_deps += other._deps[i:]
+
         ret = Dependencies(self.repo)
         ret._deps = merged_deps
         ret._deps_set = self._deps_set.union(other._deps_set)
