@@ -8,7 +8,7 @@ def read(filename):
 
 setup(
     name="xbem",
-    version="0.1.2",
+    version="0.1.3",
     author="Marat Abdullin",
     author_email="dakota@brokenpipe.ru",
     description=("Build utility for XBEM files."),

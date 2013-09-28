@@ -1,7 +1,6 @@
 from os import path
 
 from xbem.tools import parse_xml, create_subdirectories
-from xbem.ns import XBEM_BLOCK_NAMESPACE
 from xbem.tech import (BuildTech,
                        BundleBuildTech,
                        XMLDependenciesExtractor,
@@ -20,14 +19,6 @@ class XSLDependenciesExtractor(XMLDependenciesExtractor):
                 href = path.normpath(path.join(path.dirname(filename), href))
                 xsl = parse_xml(href)
                 self.extract(xsl.firstChild)
-            elif node.localName == "call-template":
-                name = node.getAttribute("name").strip()
-                i = name.find(":")
-                if i > 0:
-                    prefix = name[:i]
-                    prefixes = namespaces.get(XBEM_BLOCK_NAMESPACE)
-                    if prefixes is not None and prefix in prefixes:
-                        self.deps.append(name[i + 1:])
 
 
 class XSLSaveWithImports(object):
