@@ -95,17 +95,18 @@ class DependencyModifier(Dependency):
     LOCAL_NAME = "modifier"
 
     def __init__(self, node):
-        self.value = None
+        self.value = set()
         super(DependencyModifier, self).__init__(node)
 
     def node_action(self, node):
         if not super(DependencyModifier, self).node_action(node):
             if node.localName == "value":
-                if self.value is None:
-                    self.value = get_node_text(node)
+                val = get_node_text(node)
+                if not val in self.value:
+                    self.value.add(val)
                     return True
                 else:
-                    raise UnexpectedNodeException(node)
+                    raise CustomNodeException(node, "Duplicate value")
             else:
                 return False
         else:
@@ -113,7 +114,7 @@ class DependencyModifier(Dependency):
 
     def __repr__(self):
         return "DependencyModifier(name: '%s', value: '%s')" % \
-               (self.name, self.value or "")
+               (self.name, self.value)
 
 
 class DependencyWithModifiers(Dependency):
@@ -197,22 +198,23 @@ class DeclarationModifier(DeclarationWithFilesAndDeps):
     LOCAL_NAME = "modifier"
 
     def __init__(self, filename, node):
-        self.value = None
+        self.value = set()
         super(DeclarationModifier, self).__init__(filename, node)
 
     def __repr__(self):
         return "DeclarationModifier(name: '%s', value: '%s', deps: %s, "     \
                "files: %s)" %                                                \
-               (self.name, self.value or "", self.deps, self.files)
+               (self.name, self.value, self.deps, self.files)
 
     def node_action(self, node):
         if not super(DeclarationModifier, self).node_action(node):
             if node.localName == "value":
-                if self.value is None:
-                    self.value = get_node_text(node)
+                val = get_node_text(node)
+                if not val in self.value:
+                    self.value.add(val)
                     return True
                 else:
-                    raise UnexpectedNodeException(node)
+                    raise CustomNodeException(node, "Duplicate value")
             else:
                 return False
         else:

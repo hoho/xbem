@@ -51,7 +51,7 @@
     <xsd:complexType name="modifierElement">
         <xsd:sequence>
             <xsd:element name="name" type="xsd:string" />
-            <xsd:element name="value" type="xsd:string" minOccurs="0" />
+            <xsd:element name="value" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
             <xsd:choice minOccurs="0" maxOccurs="unbounded">
                 <xsd:element name="files" type="decl:filesElement" minOccurs="0" maxOccurs="unbounded" />
                 <xsd:any namespace="http://xslc.org/XBEM/Dependency" processContents="strict" />
